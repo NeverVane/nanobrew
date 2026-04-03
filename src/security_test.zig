@@ -4,6 +4,7 @@
 // attack vectors against nanobrew's defensive functions.
 
 const std = @import("std");
+const builtin = @import("builtin");
 const testing = std.testing;
 
 // Import the modules under test
@@ -20,6 +21,9 @@ const launchd = @import("services/launchd.zig");
 const postinstall = @import("build/postinstall.zig");
 
 const postinstall = @import("build/postinstall.zig");
+const launchd = @import("services/launchd.zig");
+const sandbox = @import("build/sandbox.zig");
+
 
 // ────────────────────────────────────────────────────────────────────────
 // 1. Path traversal in package names
@@ -547,6 +551,18 @@ test "isConflict allows same package different version" {
 
 test "isConflict flags non-cellar paths" {
     try testing.expect(linker.isConflict("/usr/bin/foo", "/opt/nanobrew/prefix/Cellar/pkg/1.0"));
+// 11. HTTPS enforcement for API and bottle domain env var overrides
+// ────────────────────────────────────────────────────────────────────────
+
+test "isValidDomainOverride rejects non-HTTPS URLs" {
+    try testing.expect(!client.isValidDomainOverride("http://evil.com/api/"));
+    try testing.expect(!client.isValidDomainOverride("ftp://evil.com/"));
+    try testing.expect(!client.isValidDomainOverride("javascript:alert(1)"));
+    try testing.expect(!client.isValidDomainOverride(""));
+    try testing.expect(!client.isValidDomainOverride("file:///etc/passwd"));
+    // Valid
+    try testing.expect(client.isValidDomainOverride("https://formulae.brew.sh/api/formula/"));
+    try testing.expect(client.isValidDomainOverride("https://my-mirror.example.com/"));
 }
 
 // ────────────────────────────────────────────────────────────────────────
@@ -739,4 +755,54 @@ test "isServiceFileSafe accepts safe service file with ExecStart inside keg" {
         \\WantedBy=multi-user.target
     ;
     try testing.expect(systemd.isServiceFileSafe(content, "/opt/nanobrew/prefix/Cellar"));
+}
+
+test "database MAX_DB_SIZE is larger than old 1 MiB limit" {
+    try testing.expect(Database.MAX_DB_SIZE > 1024 * 1024);
+    try testing.expectEqual(@as(usize, 16 * 1024 * 1024), Database.MAX_DB_SIZE);
+}
+
+// ────────────────────────────────────────────────────────────────────────
+// 14. Sandbox profile generation
+// ────────────────────────────────────────────────────────────────────────
+
+test "sandbox profile contains keg path and no unreplaced placeholders" {
+    const alloc = testing.allocator;
+    const keg = "/opt/nanobrew/prefix/Cellar/wget/1.24.5";
+    const profile = try sandbox.generateProfile(alloc, keg);
+    defer alloc.free(profile);
+
+    // Profile must contain the keg path
+    try testing.expect(std.mem.indexOf(u8, profile, keg) != null);
+
+    // No unreplaced placeholders
+    try testing.expect(std.mem.indexOf(u8, profile, "@@KEG_PATH@@") == null);
+
+    // Contains key deny rules
+    try testing.expect(std.mem.indexOf(u8, profile, "(deny network") != null);
+    try testing.expect(std.mem.indexOf(u8, profile, "(deny default)") != null);
+}
+
+test "sandbox profile rejects keg path with shell metacharacters" {
+    const alloc = testing.allocator;
+    const result = sandbox.generateProfile(alloc, "/opt/nanobrew/\"evil");
+    try testing.expectError(error.UnsafeKegPath, result);
+}
+
+test "sandboxedArgv prepends sandbox-exec on macOS" {
+    const alloc = testing.allocator;
+    const original = &[_][]const u8{ "mkdir", "-p", "/some/path" };
+    const result = try sandbox.sandboxedArgv(alloc, original, "/opt/nanobrew/prefix/Cellar/pkg/1.0");
+    defer {
+        for (result.argv) |arg| alloc.free(@constCast(arg));
+        alloc.free(result.argv);
+        if (result.profile.len > 0) alloc.free(result.profile);
+    }
+
+    if (comptime builtin.os.tag == .macos) {
+        try testing.expectEqual(original.len + 3, result.argv.len);
+        try testing.expectEqualStrings("sandbox-exec", result.argv[0]);
+    } else {
+        try testing.expectEqual(original.len, result.argv.len);
+    }
 }
