@@ -21,6 +21,12 @@ const postinstall = @import("build/postinstall.zig");
 const sandbox = @import("build/sandbox.zig");
 
 
+
+
+const postinstall = @import("build/postinstall.zig");
+const launchd = @import("services/launchd.zig");
+const sandbox = @import("build/sandbox.zig");
+const formula_cache = @import("build/formula_cache.zig");
 // ────────────────────────────────────────────────────────────────────────
 // 1. Path traversal in package names
 // ────────────────────────────────────────────────────────────────────────
@@ -453,6 +459,8 @@ test "isConflict flags non-cellar paths" {
 }
 
 // ────────────────────────────────────────────────────────────────────────
+
+
 // 11. HTTPS enforcement for API and bottle domain env var overrides
 // ────────────────────────────────────────────────────────────────────────
 
@@ -707,4 +715,31 @@ test "sandboxedArgv prepends sandbox-exec on macOS" {
     } else {
         try testing.expectEqual(original.len, result.argv.len);
     }
+}
+
+
+
+// ────────────────────────────────────────────────────────────────────────
+// 15. Formula cache hash pinning
+// ────────────────────────────────────────────────────────────────────────
+
+test "formula cache hash path is derived from name and version" {
+    var buf: [512]u8 = undefined;
+    const path = formula_cache.hashPath(&buf, "wget", "1.24.5");
+    try testing.expect(std.mem.endsWith(u8, path, "wget-1.24.5.rb.sha256"));
+    try testing.expect(std.mem.startsWith(u8, path, "/opt/nanobrew/cache/formulas/"));
+}
+
+test "formula cache rejects names with path traversal" {
+    var buf: [512]u8 = undefined;
+    try testing.expectEqual(@as(usize, 0), formula_cache.hashPath(&buf, "../evil", "1.0").len);
+    try testing.expectEqual(@as(usize, 0), formula_cache.hashPath(&buf, "foo/../../bar", "1.0").len);
+}
+
+test "computeSha256Hex produces correct hex output" {
+    const input = "hello world\n";
+    var hex: [64]u8 = undefined;
+    formula_cache.computeSha256Hex(input, &hex);
+    // sha256("hello world\n") starts with a948904f
+    try testing.expect(std.mem.startsWith(u8, &hex, "a948904f"));
 }
