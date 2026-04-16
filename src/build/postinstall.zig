@@ -8,18 +8,6 @@ const std = @import("std");
 const Formula = @import("../api/formula.zig").Formula;
 const fetch = @import("../net/fetch.zig");
 const sandbox = @import("sandbox.zig");
-
-pub const ParsedCommand = struct {
-    argv: []const []const u8,
-
-    pub fn deinit(self: ParsedCommand, alloc: std.mem.Allocator) void {
-        for (self.argv) |arg| alloc.free(arg);
-        alloc.free(self.argv);
-    }
-};
-
-
-const sandbox = @import("sandbox.zig");
 const formula_cache = @import("formula_cache.zig");
 
 pub const ParsedCommand = struct {

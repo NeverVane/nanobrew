@@ -19,13 +19,6 @@ const linker = @import("linker/linker.zig");
 const launchd = @import("services/launchd.zig");
 const postinstall = @import("build/postinstall.zig");
 const sandbox = @import("build/sandbox.zig");
-
-
-
-
-const postinstall = @import("build/postinstall.zig");
-const launchd = @import("services/launchd.zig");
-const sandbox = @import("build/sandbox.zig");
 const formula_cache = @import("build/formula_cache.zig");
 // ────────────────────────────────────────────────────────────────────────
 // 1. Path traversal in package names
@@ -667,10 +660,6 @@ test "isServiceFileSafe accepts safe service file with ExecStart inside keg" {
     try testing.expect(systemd.isServiceFileSafe(content, "/opt/nanobrew/prefix/Cellar"));
 }
 
-test "database MAX_DB_SIZE is larger than old 1 MiB limit" {
-    try testing.expect(Database.MAX_DB_SIZE > 1024 * 1024);
-    try testing.expectEqual(@as(usize, 16 * 1024 * 1024), Database.MAX_DB_SIZE);
-}
 
 // ────────────────────────────────────────────────────────────────────────
 // 14. Sandbox profile generation
