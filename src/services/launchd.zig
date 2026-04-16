@@ -131,7 +131,7 @@ pub fn start(alloc: std.mem.Allocator, plist_path: []const u8) !void {
     const plist_content = std.fs.cwd().readFileAlloc(alloc, plist_path, 64 * 1024) catch return error.LaunchctlFailed;
     defer alloc.free(plist_content);
     if (!isPlistSafe(plist_content, paths.CELLAR_DIR)) {
-        const err_writer = std.io.getStdErr().writer();
+        const err_writer = std.fs.File.stderr().deprecatedWriter();
         err_writer.print("nb: refusing to load unsafe plist: {s}\n", .{plist_path}) catch {};
         return error.LaunchctlFailed;
     }

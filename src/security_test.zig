@@ -388,6 +388,9 @@ test "isConflict allows same package different version" {
 
 test "isConflict flags non-cellar paths" {
     try testing.expect(linker.isConflict("/usr/bin/foo", "/opt/nanobrew/prefix/Cellar/pkg/1.0"));
+}
+
+// ────────────────────────────────────────────────────────────────────────
 // 12. Launchd plist content validation
 // ────────────────────────────────────────────────────────────────────────
 

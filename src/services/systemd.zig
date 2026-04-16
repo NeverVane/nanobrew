@@ -124,7 +124,7 @@ pub fn start(alloc: std.mem.Allocator, plist_path: []const u8) !void {
     const svc_content = std.fs.cwd().readFileAlloc(alloc, plist_path, 64 * 1024) catch return error.SystemdFailed;
     defer alloc.free(svc_content);
     if (!isServiceFileSafe(svc_content, paths.CELLAR_DIR)) {
-        const err_writer = std.io.getStdErr().writer();
+        const err_writer = std.fs.File.stderr().deprecatedWriter();
         err_writer.print("nb: refusing to install unsafe service file: {s}\n", .{plist_path}) catch {};
         return error.SystemdFailed;
     }
