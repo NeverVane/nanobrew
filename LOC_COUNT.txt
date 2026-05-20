@@ -1,0 +1,55 @@
+# NanoBrew Project - Lines of Code (LOC) Analysis
+Generated: 2026-05-20
+
+## Summary Statistics
+- **Total LOC: 15,677**
+
+## Breakdown by File Type
+
+### Source Files (Zig)
+Primary implementation language for the project:
+- Total Zig Files: ~11,500+ LOC
+
+### JavaScript/Node.js (Worker)
+- worker/src/index.js: 1,138 LOC
+
+### Documentation & Configuration
+- README.md: 339 LOC
+- Various JSON configs and shell scripts: ~1,500+ LOC
+
+## Top 20 Largest Source Files
+
+1. ./src/main.zig                              3,541 LOC
+2. ./worker/src/index.js                       1,138 LOC
+3. ./src/api/tap.zig                             889 LOC
+4. ./src/api/client.zig                          642 LOC
+5. ./src/db/database.zig                         579 LOC
+6. ./src/extract/native_tar.zig                  499 LOC
+7. ./src/deb/resolver.zig                        444 LOC
+8. ./src/platform/placeholder.zig                425 LOC
+9. ./src/deb/index.zig                           402 LOC
+10. ./src/cask/install.zig                       399 LOC
+11. ./src/macho/relocate.zig                     385 LOC
+12. ./src/deb/extract.zig                        372 LOC
+13. ./src/net/downloader.zig                     363 LOC
+14. ./README.md                                  339 LOC
+15. ./src/resolve/deps.zig                       330 LOC
+16. ./src/security_test.zig                      316 LOC
+17. ./src/kernel/simd_scanner.zig                315 LOC
+18. ./src/elf/relocate.zig                       269 LOC
+19. ./src/exec/thread_pool.zig                   265 LOC
+20. ./src/fs/compress.zig                        260 LOC
+
+## Project Structure
+- src/               - Main Zig implementation
+- worker/           - JavaScript worker service
+- tests/            - Test files
+- bench/            - Benchmarking utilities
+- assets/           - Static assets
+- Formula/          - Package formula definitions
+
+## Notes
+- Primary language: Zig (high-performance systems programming)
+- Secondary language: JavaScript (Node.js worker)
+- Excludes: .git directory, node_modules
+- Includes: Zig, JavaScript, JSON, Markdown, Shell scripts
